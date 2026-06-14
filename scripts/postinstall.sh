@@ -16,12 +16,14 @@ done
 MCP="/opt/org.v-sekai/blender-mcp/venv/bin/blender-mcp"
 [ -x "${MCP}" ] && ln -sf "${MCP}" "/usr/local/bin/blender-mcp"
 
-# Point the OS-installed Blender (a package dependency) at our vendored addons.
-# NOTE: BLENDER_SYSTEM_SCRIPTS *replaces* the default system scripts dir, so this
-# trades the distro Blender's bundled system addons for ours.  If that matters,
-# drop this and register /opt/.../scripts as an extra extensions repo instead.
+# Point the OS-installed Blender (a package dependency) at our vendored addons,
+# per Blender's "Deploying Blender" guide.  Both vars ADD to Blender's defaults
+# (scripts/extensions load from user AND system dirs), so nothing is clobbered.
+# A startup script (scripts/startup/enable_addons.py) auto-enables them, so no
+# per-user preference change is needed.  Applies to new login sessions.
 cat > /etc/profile.d/org.v-sekai-blender.sh <<EOF
 export BLENDER_SYSTEM_SCRIPTS="/opt/org.v-sekai/blender/${BLENDER_VER}/scripts"
+export BLENDER_SYSTEM_EXTENSIONS="/opt/org.v-sekai/blender/${BLENDER_VER}/scripts/extensions"
 EOF
 
 exit 0

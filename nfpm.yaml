@@ -32,6 +32,12 @@ license: MIT
 contents:
   - src: stage/opt/org.v-sekai
     dst: /opt/org.v-sekai
+  # udev rule granting non-root access to the Rebocap dongle (248a:8002) — see
+  # the file header.  Vendor rules live under /usr/lib/udev/rules.d.
+  - src: udev/70-sinew-rebocap.rules
+    dst: /usr/lib/udev/rules.d/70-sinew-rebocap.rules
+    file_info:
+      mode: 0644
 
 scripts:
   postinstall: scripts/postinstall.sh
@@ -40,6 +46,12 @@ scripts:
 overrides:
   rpm:
     # /opt is owned by filesystem on RPM distros; don't let rpm try to own it.
+    # This list REPLACES the top-level contents for rpm, so the udev rule is
+    # repeated here or rpm packages would ship without it.
     contents:
       - src: stage/opt/org.v-sekai
         dst: /opt/org.v-sekai
+      - src: udev/70-sinew-rebocap.rules
+        dst: /usr/lib/udev/rules.d/70-sinew-rebocap.rules
+        file_info:
+          mode: 0644

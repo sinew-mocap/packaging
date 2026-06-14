@@ -1,0 +1,15 @@
+# Sinew mocap — Rebocap "RebornBodyCap" dongle (JXQ Ltd, USB 248a:8002).
+#
+# The dongle enumerates as a CDC-ACM serial node (/dev/ttyACM*), which is
+# root:dialout 0660 by default — so sinew_tui can only open it as root or for a
+# dialout member.  This rule removes that need:
+#
+#   TAG+="uaccess"     the active local-seat user gets a logind ACL on the node,
+#                      so the person running sinew_tui at the desktop opens it
+#                      with no sudo and no group change (same mechanism webcams
+#                      and game controllers use).
+#   GROUP="dialout", MODE="0660"   headless / SSH fallback: a dialout member can
+#                      still open it when there is no graphical seat session.
+#   SYMLINK+="sinew-dongle"        stable name regardless of ttyACM index, so a
+#                      launcher can pass `--port /dev/sinew-dongle`.
+SUBSYSTEM=="tty", ATTRS{idVendor}=="248a", ATTRS{idProduct}=="8002", TAG+="uaccess", GROUP="dialout", MODE="0660", SYMLINK+="sinew-dongle"

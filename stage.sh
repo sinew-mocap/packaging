@@ -22,7 +22,8 @@ rm -rf "$stage"
 mkdir -p "$vendor/sinew/$SINEW_VER/bin" \
          "$vendor/sinew/$SINEW_VER/share/sinew" \
          "$vendor/blender/$BLENDER_VER/scripts/addons" \
-         "$vendor/blender/$BLENDER_VER/scripts/extensions" \
+         "$vendor/blender/$BLENDER_VER/scripts/startup" \
+         "$vendor/blender/$BLENDER_VER/scripts/extensions/system" \
          "$vendor/blender-mcp"
 
 say() { printf '  %-22s %s\n' "$1" "$2"; }
@@ -53,12 +54,15 @@ fi
 say soma_pheno.bin ok
 
 # ── Blender addons (Blender itself is an OS dependency — see nfpm.yaml) ───────
-# Two load mechanisms, two dirs:
-#   NodeOSC  — legacy bl_info addon  -> scripts/addons/ (loaded as a Script Directory)
-#   blender_mcp_addon — has blender_manifest.toml, i.e. an extension -> scripts/extensions/
-#     (loaded as an extension *repository*; it will NOT load from scripts/addons).
+# Per Blender's "Deploying Blender" guide, bundle via the system env vars (both
+# ADD to Blender's defaults — they do not replace user/bundled scripts):
+#   NodeOSC  — legacy bl_info addon -> scripts/addons/  (via BLENDER_SYSTEM_SCRIPTS)
+#   blender_mcp_addon — an extension (blender_manifest.toml) -> the read-only
+#     System repo, which must be a 'system/' subdir of BLENDER_SYSTEM_EXTENSIONS.
+#   enable_addons.py — a startup script that auto-enables both for every user.
 addons="$vendor/blender/$BLENDER_VER/scripts/addons"
-exts="$vendor/blender/$BLENDER_VER/scripts/extensions"
+exts="$vendor/blender/$BLENDER_VER/scripts/extensions/system"
+startup="$vendor/blender/$BLENDER_VER/scripts/startup"
 nodeosc_src="${NODEOSC_SRC:-$HOME/.config/blender/$BLENDER_VER/scripts/addons/NodeOSC}"
 [ -d "$nodeosc_src" ] || { git clone --depth 1 https://github.com/maybites/NodeOSC.git "$(mktemp -d)/NodeOSC" && nodeosc_src="$_"; }
 cp -a "$nodeosc_src" "$addons/NodeOSC"; rm -rf "$addons/NodeOSC/.git"; say NodeOSC ok
@@ -66,6 +70,8 @@ mcp_zip="${MCP_ADDON_ZIP:-/tmp/blender-mcp-dl/blender_mcp_addon-2.0.0-dev.1.zip}
 if [ -f "$mcp_zip" ]; then unzip -q "$mcp_zip" -d "$exts/"
 else cp -a "$HOME/.config/blender/$BLENDER_VER/extensions/user_default/blender_mcp_addon" "$exts/"; fi
 say blender_mcp_addon ok
+install -m644 "$here/blender-setup/enable_addons.py" "$startup/enable_addons.py"; say enable_addons.py ok
+install -m644 "$here/blender-setup/enforce_fps.py" "$startup/enforce_fps.py"; say enforce_fps.py ok
 
 # ── blender-mcp server → a relocatable venv on the system python3 ─────────────
 # Built --relocatable so it works from /opt after install; the rpm declares
