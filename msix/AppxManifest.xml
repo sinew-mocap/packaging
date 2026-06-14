@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Identity/Publisher must match the signing cert subject; Version is 4-part
+     (keep the 4th component 0 for Store). pack.ps1 patches Version/Publisher. -->
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap rescap">
+
+  <Identity
+    Name="v-sekai.Sinew"
+    Publisher="CN=v-sekai"
+    Version="0.4.1.0"
+    ProcessorArchitecture="x64" />
+
+  <Properties>
+    <DisplayName>Sinew Mocap</DisplayName>
+    <PublisherDisplayName>v-sekai</PublisherDisplayName>
+    <Logo>assets\StoreLogo.png</Logo>
+    <Description>Rebocap driver, VR bridge, and the ANNY body viewer.</Description>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.22621.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="en-us" />
+  </Resources>
+
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+
+  <Applications>
+    <Application Id="SinewTui" Executable="bin\sinew_tui.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements
+        DisplayName="Sinew TUI"
+        Description="rebocap dongle to /sinew OSC, with a terminal monitor"
+        BackgroundColor="transparent"
+        Square150x150Logo="assets\Square150x150Logo.png"
+        Square44x44Logo="assets\Square44x44Logo.png" />
+    </Application>
+
+    <Application Id="AnnyViewer" Executable="bin\anny_demo.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements
+        DisplayName="ANNY Viewer"
+        Description="live ANNY body viewer driven by /sinew and /vr OSC"
+        BackgroundColor="transparent"
+        Square150x150Logo="assets\Square150x150Logo.png"
+        Square44x44Logo="assets\Square44x44Logo.png" />
+    </Application>
+
+    <Application Id="HmdReader" Executable="bin\hmd_reader.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements
+        AppListEntry="none"
+        DisplayName="Sinew VR HMD Reader"
+        Description="read SteamVR HMD/controller poses, forward as /vr OSC"
+        BackgroundColor="transparent"
+        Square150x150Logo="assets\Square150x150Logo.png"
+        Square44x44Logo="assets\Square44x44Logo.png" />
+    </Application>
+
+    <Application Id="VrDevices" Executable="bin\vr_devices.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements
+        AppListEntry="none"
+        DisplayName="Sinew VR Devices"
+        Description="enumerate SteamVR devices"
+        BackgroundColor="transparent"
+        Square150x150Logo="assets\Square150x150Logo.png"
+        Square44x44Logo="assets\Square44x44Logo.png" />
+    </Application>
+  </Applications>
+</Package>

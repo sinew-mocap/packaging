@@ -1,0 +1,65 @@
+# windows-latest CI: build the Win64 Sinew apps, then pack/sign one .msix.
+# Set secrets SINEW_PFX_BASE64 + SINEW_PFX_PASSWORD for a trusted cert; without
+# them the job self-signs a TEST cert (installable only after trusting it).
+name: Release MSIX
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Four-part package version (e.g. 0.4.1.0)
+        required: true
+        default: 0.4.1.0
+
+permissions:
+  contents: write
+
+jobs:
+  msix:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { repository: sinew-mocap/packaging, path: packaging-repo }
+      - uses: actions/checkout@v4
+        with: { repository: sinew-mocap/driver,     path: driver }
+      - uses: actions/checkout@v4
+        with: { repository: sinew-mocap/vr_bridge,   path: vr_bridge }
+      - uses: actions/checkout@v4
+        with: { repository: sinew-mocap/viewer,      path: viewer }
+      - uses: actions/checkout@v4
+        with: { repository: sinew-mocap/solve,       path: solve }
+      - uses: actions/checkout@v4
+        with: { repository: sinew-mocap/mount_drift, path: mount_drift }
+
+      - name: Build Win64 executables
+        shell: bash
+        run: |
+          ver="${{ github.event.inputs.version }}"; ver="${ver%.*}"
+          for r in driver vr_bridge viewer; do
+            cmake -S "$r" -B "$r/build" -DCMAKE_BUILD_TYPE=Release -DSINEW_VERSION="$ver"
+            cmake --build "$r/build" --config Release --parallel
+          done
+
+      - name: Stage payload
+        shell: bash
+        run: |
+          mkdir -p stage-win/bin
+          find driver/build vr_bridge/build viewer/build -maxdepth 4 -name '*.exe' \
+            \( -name sinew_tui.exe -o -name anny_demo.exe -o -name hmd_reader.exe -o -name vr_devices.exe \) \
+            -exec cp {} stage-win/bin/ \;
+          find viewer/build -maxdepth 4 \( -name lbs.spv -o -name 'sinew_view.dll' \) -exec cp {} stage-win/bin/ \;
+          ls -la stage-win/bin
+
+      - name: Import signing cert
+        if: ${{ secrets.SINEW_PFX_BASE64 != '' }}
+        shell: bash
+        run: echo "${{ secrets.SINEW_PFX_BASE64 }}" | base64 -d > sinew.pfx
+
+      - name: Pack + sign MSIX
+        shell: pwsh
+        run: |
+          $pfx = if (Test-Path sinew.pfx) { @("-PfxPath","sinew.pfx","-PfxPassword","${{ secrets.SINEW_PFX_PASSWORD }}") } else { @() }
+          pwsh packaging-repo/msix/pack.ps1 -BinDir stage-win/bin -Version "${{ github.event.inputs.version }}" -OutDir dist @pfx
+
+      - uses: actions/upload-artifact@v4
+        with: { name: sinew-msix, path: dist/*.msix }

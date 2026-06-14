@@ -1,0 +1,44 @@
+# nFPM config — builds the v-sekai Sinew suite as native Linux packages (.deb/.rpm)
+# from the staged /opt/org.v-sekai tree.  nFPM writes the archives natively, so no
+# dpkg/rpmbuild toolchain is needed (runs in any CI leg).
+#   packaging/stage.sh && nfpm pkg -f packaging/nfpm.yaml -p deb -t dist/
+#   packaging/stage.sh && nfpm pkg -f packaging/nfpm.yaml -p rpm -t dist/
+#
+# Package id is deb/rpm-clean (no dots); the reverse-DNS namespace lives on disk
+# under /opt/org.v-sekai, not in the package name.
+name: v-sekai-sinew
+arch: amd64
+platform: linux
+version: ${SINEW_PKG_VERSION}
+section: graphics
+priority: optional
+maintainer: v-sekai <ernest.lee@chibifire.com>
+description: |
+  Sinew mocap suite — rebocap driver (sinew_tui), VR bridge readers, the ANNY
+  body viewer (anny_demo), and the Blender addons (NodeOSC, blender_mcp_addon),
+  installed under /opt/org.v-sekai.  Blender itself comes from the OS package.
+
+# Blender is installed by the OS package manager (apt/dnf), not bundled: Depends
+# on deb, Requires on rpm.  nfpm maps `depends` to both.
+depends:
+  - blender
+vendor: v-sekai
+homepage: https://github.com/sinew-mocap
+license: MIT
+
+# Whole staged vendor tree -> filesystem root.  One mapping keeps deb and rpm
+# byte-identical in layout and lets stage.sh own the structure.
+contents:
+  - src: stage/opt/org.v-sekai
+    dst: /opt/org.v-sekai
+
+scripts:
+  postinstall: scripts/postinstall.sh
+  postremove: scripts/postremove.sh
+
+overrides:
+  rpm:
+    # /opt is owned by filesystem on RPM distros; don't let rpm try to own it.
+    contents:
+      - src: stage/opt/org.v-sekai
+        dst: /opt/org.v-sekai
