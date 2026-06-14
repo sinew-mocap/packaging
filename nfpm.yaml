@@ -22,6 +22,7 @@ description: |
 # on deb, Requires on rpm.  nfpm maps `depends` to both.
 depends:
   - blender
+  - python3
 vendor: v-sekai
 homepage: https://github.com/sinew-mocap
 license: MIT

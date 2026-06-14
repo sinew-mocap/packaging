@@ -21,7 +21,9 @@ BLENDER_VER="${BLENDER_VER:-5.1}"
 rm -rf "$stage"
 mkdir -p "$vendor/sinew/$SINEW_VER/bin" \
          "$vendor/sinew/$SINEW_VER/share/sinew" \
-         "$vendor/blender/$BLENDER_VER/scripts/addons"
+         "$vendor/blender/$BLENDER_VER/scripts/addons" \
+         "$vendor/blender/$BLENDER_VER/scripts/extensions" \
+         "$vendor/blender-mcp"
 
 say() { printf '  %-22s %s\n' "$1" "$2"; }
 
@@ -50,17 +52,33 @@ else
 fi
 say soma_pheno.bin ok
 
-# ── Blender addons → /opt/org.v-sekai/blender/5.1/scripts/addons ─────────────
-# Blender itself is an OS dependency (apt/dnf install blender — see nfpm.yaml);
-# we only ship our addons into the vendored scripts dir it's pointed at.
+# ── Blender addons (Blender itself is an OS dependency — see nfpm.yaml) ───────
+# Two load mechanisms, two dirs:
+#   NodeOSC  — legacy bl_info addon  -> scripts/addons/ (loaded as a Script Directory)
+#   blender_mcp_addon — has blender_manifest.toml, i.e. an extension -> scripts/extensions/
+#     (loaded as an extension *repository*; it will NOT load from scripts/addons).
 addons="$vendor/blender/$BLENDER_VER/scripts/addons"
+exts="$vendor/blender/$BLENDER_VER/scripts/extensions"
 nodeosc_src="${NODEOSC_SRC:-$HOME/.config/blender/$BLENDER_VER/scripts/addons/NodeOSC}"
 [ -d "$nodeosc_src" ] || { git clone --depth 1 https://github.com/maybites/NodeOSC.git "$(mktemp -d)/NodeOSC" && nodeosc_src="$_"; }
 cp -a "$nodeosc_src" "$addons/NodeOSC"; rm -rf "$addons/NodeOSC/.git"; say NodeOSC ok
 mcp_zip="${MCP_ADDON_ZIP:-/tmp/blender-mcp-dl/blender_mcp_addon-2.0.0-dev.1.zip}"
-if [ -f "$mcp_zip" ]; then unzip -q "$mcp_zip" -d "$addons/"
-else cp -a "$HOME/.config/blender/$BLENDER_VER/extensions/user_default/blender_mcp_addon" "$addons/"; fi
+if [ -f "$mcp_zip" ]; then unzip -q "$mcp_zip" -d "$exts/"
+else cp -a "$HOME/.config/blender/$BLENDER_VER/extensions/user_default/blender_mcp_addon" "$exts/"; fi
 say blender_mcp_addon ok
+
+# ── blender-mcp server → a relocatable venv on the system python3 ─────────────
+# Built --relocatable so it works from /opt after install; the rpm declares
+# Requires: python3 (the venv references /usr/bin/python3, it doesn't bundle one).
+mcp_wheel="${MCP_WHEEL:-/tmp/blender-mcp-dl/chibifire_blender_mcp-2.0.0-py3-none-any.whl}"
+if [ ! -f "$mcp_wheel" ]; then
+  mcp_wheel="$(mktemp -d)/mcp.whl"
+  curl -fsSL https://github.com/v-sekai-multiplayer-fabric/blender-mcp/releases/download/v2.0.0-dev.1/chibifire_blender_mcp-2.0.0-py3-none-any.whl -o "$mcp_wheel"
+fi
+venv="$vendor/blender-mcp/venv"
+uv venv --relocatable --python /usr/bin/python3 "$venv" >/dev/null 2>&1
+uv pip install --quiet --python "$venv/bin/python" "$mcp_wheel"
+say blender-mcp ok
 
 echo "staged -> $stage"
 find "$vendor" -maxdepth 4 -type d | sed "s|$stage||"
