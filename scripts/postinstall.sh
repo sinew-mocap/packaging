@@ -26,4 +26,11 @@ export BLENDER_SYSTEM_SCRIPTS="/opt/org.v-sekai/blender/${BLENDER_VER}/scripts"
 export BLENDER_SYSTEM_EXTENSIONS="/opt/org.v-sekai/blender/${BLENDER_VER}/scripts/extensions"
 EOF
 
+# Apply the Rebocap dongle udev rule we just installed so an already-plugged
+# dongle picks up the uaccess ACL / dialout group without a replug.
+if command -v udevadm >/dev/null 2>&1; then
+  udevadm control --reload-rules || true
+  udevadm trigger --subsystem-match=tty --attr-match=idVendor=248a || true
+fi
+
 exit 0

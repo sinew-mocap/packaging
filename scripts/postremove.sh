@@ -10,4 +10,10 @@ done
 rm -f /usr/local/bin/blender-mcp
 rm -f /etc/profile.d/org.v-sekai-blender.sh
 
+# The package manager removes the udev rule file itself; reload so the kernel
+# drops the rule we no longer ship.
+if command -v udevadm >/dev/null 2>&1; then
+  udevadm control --reload-rules || true
+fi
+
 exit 0
