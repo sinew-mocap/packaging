@@ -53,6 +53,16 @@ else
 fi
 say soma_pheno.bin ok
 
+# ── osctest — the Lean OSC sender (sinew-mocap/osc-tester) ────────────────────
+# Self-contained binary (no Lean shared-lib runtime dep); built with lake.
+osc_src="${OSC_TESTER_SRC:-$root/osc-tester}"
+if [ -d "$osc_src" ] && command -v lake >/dev/null 2>&1; then
+  ( cd "$osc_src" && lake build ) >/dev/null 2>&1
+  install -m755 "$osc_src/.lake/build/bin/osctest" "$vendor/sinew/$SINEW_VER/bin/osctest"; say osctest ok
+else
+  echo "  osctest                SKIPPED (needs lake + $osc_src)"
+fi
+
 # ── Blender addons (Blender itself is an OS dependency — see nfpm.yaml) ───────
 # Per Blender's "Deploying Blender" guide, bundle via the system env vars (both
 # ADD to Blender's defaults — they do not replace user/bundled scripts):

@@ -12,4 +12,8 @@
 #                      still open it when there is no graphical seat session.
 #   SYMLINK+="sinew-dongle"        stable name regardless of ttyACM index, so a
 #                      launcher can pass `--port /dev/sinew-dongle`.
-SUBSYSTEM=="tty", ATTRS{idVendor}=="248a", ATTRS{idProduct}=="8002", TAG+="uaccess", GROUP="dialout", MODE="0660", SYMLINK+="sinew-dongle"
+#   TAG+="systemd", ENV{SYSTEMD_WANTS}="sinew-driver.service"
+#                      hand the device to systemd and pull in the driver service
+#                      when the dongle is plugged; the service BindsTo the
+#                      dev-sinew\x2ddongle.device unit, so unplug stops it.
+SUBSYSTEM=="tty", ATTRS{idVendor}=="248a", ATTRS{idProduct}=="8002", TAG+="uaccess", GROUP="dialout", MODE="0660", SYMLINK+="sinew-dongle", TAG+="systemd", ENV{SYSTEMD_WANTS}="sinew-driver.service"

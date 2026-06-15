@@ -38,6 +38,21 @@ contents:
     dst: /usr/lib/udev/rules.d/70-sinew-rebocap.rules
     file_info:
       mode: 0644
+  # System service: headless driver streaming OSC to the network, pulled in by
+  # the udev rule when the dongle is plugged.
+  - src: systemd/sinew-driver.service
+    dst: /usr/lib/systemd/system/sinew-driver.service
+    file_info:
+      mode: 0644
+  - src: sysusers/sinew-driver.conf
+    dst: /usr/lib/sysusers.d/sinew-driver.conf
+    file_info:
+      mode: 0644
+  - src: systemd/sinew-driver.env
+    dst: /etc/default/sinew-driver
+    type: config|noreplace
+    file_info:
+      mode: 0644
 
 scripts:
   postinstall: scripts/postinstall.sh
@@ -53,5 +68,18 @@ overrides:
         dst: /opt/org.v-sekai
       - src: udev/70-sinew-rebocap.rules
         dst: /usr/lib/udev/rules.d/70-sinew-rebocap.rules
+        file_info:
+          mode: 0644
+      - src: systemd/sinew-driver.service
+        dst: /usr/lib/systemd/system/sinew-driver.service
+        file_info:
+          mode: 0644
+      - src: sysusers/sinew-driver.conf
+        dst: /usr/lib/sysusers.d/sinew-driver.conf
+        file_info:
+          mode: 0644
+      - src: systemd/sinew-driver.env
+        dst: /etc/default/sinew-driver
+        type: config|noreplace
         file_info:
           mode: 0644

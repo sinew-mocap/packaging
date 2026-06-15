@@ -1,0 +1,45 @@
+[Unit]
+Description=Sinew mocap driver — streams Rebocap tracker data as OSC to network consumers
+Documentation=https://github.com/sinew-mocap
+# Lifetime is tied to the dongle: the udev rule (70-sinew-rebocap.rules) tags the
+# device for systemd and pulls this service in via SYSTEMD_WANTS when the dongle
+# is plugged; BindsTo stops the service when it is unplugged.  dev-sinew\x2ddongle
+# is the .device unit systemd derives from the /dev/sinew-dongle symlink.
+BindsTo=dev-sinew\x2ddongle.device
+After=dev-sinew\x2ddongle.device
+
+[Service]
+Type=exec
+User=sinew
+Group=sinew
+# The dongle node is root:dialout 0660 (see the udev rule); a system service gets
+# no seat uaccess ACL, so membership in dialout is how it opens the port.
+SupplementaryGroups=dialout
+
+# Where the OSC goes and which kit files to load.  Edit /etc/default/sinew-driver
+# to point SINEW_DEST_IP at the machine(s) that should receive the stream.  The
+# leading '-' means a missing file is not an error (the defaults below apply).
+EnvironmentFile=-/etc/default/sinew-driver
+Environment=SINEW_DEST_IP=127.0.0.1
+Environment=SINEW_DEST_PORT=39539
+
+# appPort is positional (argv[1]); --ip sets the destination host.  Result:
+# the driver fans every /sinew packet to SINEW_DEST_IP:SINEW_DEST_PORT.
+ExecStart=/opt/org.v-sekai/sinew/0.4/bin/sinew_tui ${SINEW_DEST_PORT} --headless --port /dev/sinew-dongle --ip ${SINEW_DEST_IP}
+
+Restart=on-failure
+RestartSec=2
+
+# Hardening — the driver needs only the serial device and a UDP socket.
+WorkingDirectory=/opt/org.v-sekai/sinew/0.4/share/sinew
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ProtectControlGroups=yes
+ProtectKernelTunables=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+ReadWritePaths=/opt/org.v-sekai/sinew/0.4/share/sinew
+
+[Install]
+WantedBy=multi-user.target
