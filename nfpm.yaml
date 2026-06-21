@@ -15,14 +15,9 @@ priority: optional
 maintainer: v-sekai <ernest.lee@chibifire.com>
 description: |
   Sinew mocap suite — rebocap driver (sinew_tui), VR bridge readers, the ANNY
-  body viewer (anny_demo), and the Blender addons (NodeOSC, blender_mcp_addon),
-  installed under /opt/org.v-sekai.  Blender itself comes from the OS package.
-
-# Blender is installed by the OS package manager (apt/dnf), not bundled: Depends
-# on deb, Requires on rpm.  nfpm maps `depends` to both.
-depends:
-  - blender
-  - python3
+  body viewer (anny_demo), and the osctest OSC sender, installed under
+  /opt/org.v-sekai.  The Blender addons ship separately as v-sekai-blender
+  (v-sekai/blender-packaging).
 vendor: v-sekai
 homepage: https://github.com/sinew-mocap
 license: MIT
