@@ -1,6 +1,6 @@
 #!/bin/sh
 # Undo what postinstall wired up.  The /opt tree itself is removed by the package
-# manager (it owns those files); we only clean the symlinks + profile.d we added.
+# manager (it owns those files); we only clean the PATH symlinks we added.
 set -e
 
 # Only run on FINAL removal, not during an upgrade.  On rpm upgrade the old
@@ -17,8 +17,6 @@ for app in sinew_tui hmd_reader vr_devices anny_demo osctest; do
   link="/usr/local/bin/${app}"
   [ -L "${link}" ] && rm -f "${link}"
 done
-rm -f /usr/local/bin/blender-mcp
-rm -f /etc/profile.d/org.v-sekai-blender.sh
 
 # Stop and deregister the driver service (its unit file is removed by the
 # package manager).
